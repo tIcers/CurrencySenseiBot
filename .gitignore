@@ -1,2 +1,4 @@
 .env
 discord/
+nodemon.json
+__pycache__/
