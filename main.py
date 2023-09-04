@@ -5,6 +5,8 @@ import asyncio
 import aiohttp
 import certifi
 import requests
+from datetime import datetime
+from pytz import timezone
 from discord.ext import commands, tasks
 from const import ECON_NEWS_CHANNEL_ID, CURRENCY_CHANNEL_ID
 
@@ -12,8 +14,10 @@ aiohttp.TCPConnector.ssl = False
 
 os.environ['SSL_CERT_FILE'] = certifi.where()
 
-TOKEN = os.environ.get("TOKEN")
+TOKEN = os.environ.get("TOKEN") 
 CURRENCY_API_KEY = os.environ.get("CURRENCY_API_KEY")
+
+vancouver_timezone = timezone('America/Vancouver')
 
 intents = discord.Intents.default()
 
@@ -84,24 +88,25 @@ async def rate(ctx, *args):
     await ctx.send(f'{base_currency.upper()} To JPY is {rate}')
 
 
-@tasks.loop(seconds=3600)
+@tasks.loop(hours=1)
 async def send_converstion_rates_hourly():
-    print("send_converstion_rates_hourly function called")
     base_currencies = ['USD', 'CAD']
     target_currency = 'JPY'
-
     currency_channel = bot.get_channel(CURRENCY_CHANNEL_ID)
 
-    print("currency_channel id is..", currency_channel)
-
     try:
-        print("...send_converstion_rates_hourly...")
-        for base_currency in base_currencies:
-            if currency_channel:
-                rate = get_currency_conversion(base_currency, target_currency)
-                await currency_channel.send(f'{base_currency} to {target_currency} is {rate}')
-            else:
-                print(f"Channel with ID {currency_channel} not found.")
+        current_vancouver_time = datetime.now(vancouver_timezone)
+        if current_vancouver_time.hour >= 6:
+            for base_currency in base_currencies:
+                if currency_channel:
+                    rate = get_currency_conversion(base_currency, target_currency)
+                    local_time = current_vancouver_time.strftime('%Y-%m-%d %H:%M:%S %Z')
+                    message = f'Every Hour Update: {base_currency} to {target_currency} is {rate} at {local_time}'
+                    await currency_channel.send(message)
+                else:
+                    print(f"Channel with ID {currency_channel} not found.")
+        else:
+            print("...Skipping message send during quiet hours...")
     except Exception as e:
         print(f"An error occurred in the main loop: {e}")
 
