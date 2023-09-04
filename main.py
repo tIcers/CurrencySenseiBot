@@ -5,7 +5,7 @@ import asyncio
 import aiohttp
 import certifi
 import requests
-from discord.ext import commands
+from discord.ext import commands, tasks
 from const import ECON_NEWS_CHANNEL_ID, CURRENCY_CHANNEL_ID
 
 aiohttp.TCPConnector.ssl = False
@@ -41,6 +41,7 @@ async def on_ready():
     currency_channel = bot.get_channel(CURRENCY_CHANNEL_ID)
     print(f"currency_channel:{currency_channel.id}")
     await make_request()
+    send_converstion_rates_hourly.start()
 
 
 @bot.event
@@ -83,12 +84,17 @@ async def rate(ctx, *args):
     await ctx.send(f'{base_currency.upper()} To JPY is {rate}')
 
 
+@tasks.loop(seconds=3600)
 async def send_converstion_rates_hourly():
+    print("send_converstion_rates_hourly function called")
     base_currencies = ['USD', 'CAD']
     target_currency = 'JPY'
 
     currency_channel = bot.get_channel(CURRENCY_CHANNEL_ID)
-    while True:
+
+    print("currency_channel id is..", currency_channel)
+
+    try:
         print("...send_converstion_rates_hourly...")
         for base_currency in base_currencies:
             if currency_channel:
@@ -96,10 +102,12 @@ async def send_converstion_rates_hourly():
                 await currency_channel.send(f'{base_currency} to {target_currency} is {rate}')
             else:
                 print(f"Channel with ID {currency_channel} not found.")
-        await asyncio.sleep(1)
+    except Exception as e:
+        print(f"An error occurred in the main loop: {e}")
 
 
 def get_currency_conversion(base_currency, target_currency):
+    print("...get_currency_conversion...")
     url = f'https://v6.exchangerate-api.com/v6/{CURRENCY_API_KEY}/latest/{base_currency}'
     response = requests.get(url)
     data = response.json()
@@ -130,8 +138,8 @@ async def economic_calender_notification():
 
 
 async def main():
+    print("...Main function called...")
     await bot.start(TOKEN)
-    asyncio.create_task(send_converstion_rates_hourly())
 
 if __name__ == "__main__":
     asyncio.run(main())
