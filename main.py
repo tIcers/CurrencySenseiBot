@@ -6,7 +6,7 @@ import aiohttp
 import certifi
 import requests
 from discord.ext import commands
-from const import CURRENCY_CHANNEL_ID, ECON_NEWS_CHANNEL_ID
+from const import ECON_NEWS_CHANNEL_ID, CURRENCY_CHANNEL_ID
 
 aiohttp.TCPConnector.ssl = False
 
@@ -16,19 +16,30 @@ TOKEN = os.environ.get("TOKEN")
 CURRENCY_API_KEY = os.environ.get("CURRENCY_API_KEY")
 
 intents = discord.Intents.default()
+
 intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
+bot.remove_command('help')
+bot_commands = [
+        "!convert [base_currency] - Convert currency to JPY",
+        "!currencies - List major currencies",
+        "!help - Show this help message",
+]
 
 
 async def make_request():
     async with aiohttp.ClientSession() as session:
         async with session.get('https://discord.com') as response:
-            print(await response.text())
+            print("...make_request method...")
+            await response.text()
 
 
 @bot.event
 async def on_ready():
+    print("...on_ready...")
     print(f"We have logged in as {bot.user.name}")
+    currency_channel = bot.get_channel(CURRENCY_CHANNEL_ID)
+    print(f"currency_channel:{currency_channel.id}")
     await make_request()
 
 
@@ -45,6 +56,22 @@ async def on_message(message):
 
 
 @bot.command()
+async def help(ctx):
+    commands_list = "\n".join(bot_commands)
+
+    await ctx.send(f"Available commands:\n```{commands_list}```")
+
+
+@bot.command()
+async def currencies(ctx):
+    major_currencies = ["USD", "EUR", "JPY", "GBP", "AUD", "CAD", "CHF", "CNY"]
+
+    currency_list = "\n".join(major_currencies)
+
+    await ctx.send(f"Major currencies: \n{currency_list}")
+
+
+@bot.command()
 async def rate(ctx, *args):
     if not args:
         await ctx.send("Please provide the base currency\n (e.g., !rate USD)")
@@ -56,11 +83,26 @@ async def rate(ctx, *args):
     await ctx.send(f'{base_currency.upper()} To JPY is {rate}')
 
 
+async def send_converstion_rates_hourly():
+    base_currencies = ['USD', 'CAD']
+    target_currency = 'JPY'
+
+    currency_channel = bot.get_channel(CURRENCY_CHANNEL_ID)
+    while True:
+        print("...send_converstion_rates_hourly...")
+        for base_currency in base_currencies:
+            if currency_channel:
+                rate = get_currency_conversion(base_currency, target_currency)
+                await currency_channel.send(f'{base_currency} to {target_currency} is {rate}')
+            else:
+                print(f"Channel with ID {currency_channel} not found.")
+        await asyncio.sleep(1)
+
+
 def get_currency_conversion(base_currency, target_currency):
     url = f'https://v6.exchangerate-api.com/v6/{CURRENCY_API_KEY}/latest/{base_currency}'
     response = requests.get(url)
     data = response.json()
-    print(f"{target_currency} to {base_currency} is {data['conversion_rates'][target_currency]}")
     return data['conversion_rates'][target_currency]
 
 
@@ -86,5 +128,10 @@ async def check_currency_flucturations():
 async def economic_calender_notification():
     pass
 
+
+async def main():
+    await bot.start(TOKEN)
+    asyncio.create_task(send_converstion_rates_hourly())
+
 if __name__ == "__main__":
-    bot.run(TOKEN)
+    asyncio.run(main())
