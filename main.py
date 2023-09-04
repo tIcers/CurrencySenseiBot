@@ -14,7 +14,7 @@ aiohttp.TCPConnector.ssl = False
 
 os.environ['SSL_CERT_FILE'] = certifi.where()
 
-TOKEN = os.environ.get("TOKEN") 
+TOKEN = os.environ.get("TOKEN")
 CURRENCY_API_KEY = os.environ.get("CURRENCY_API_KEY")
 
 vancouver_timezone = timezone('America/Vancouver')
@@ -25,7 +25,7 @@ intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 bot.remove_command('help')
 bot_commands = [
-        "!convert [base_currency] - Convert currency to JPY",
+        "!convert [amount] [base_currency] [target_currency]- Convert amount Base to target Currency\n e.g 10000 CAD JPY",
         "!currencies - List major currencies",
         "!help - Show this help message",
 ]
@@ -88,6 +88,26 @@ async def rate(ctx, *args):
     await ctx.send(f'{base_currency.upper()} To JPY is {rate}')
 
 
+@bot.command()
+async def convert(ctx, *args):
+    if not args:
+        await ctx.send("Please provide the amount, base, and target currencies\n(e.g., !convert 10000 USD JPY)")
+        return
+
+    amount = args[0]
+    base_currency = args[1].upper()
+    target_currency = args[2].upper()
+    result = get_amount_conversion(amount, base_currency, target_currency)
+    await ctx.send(f'{amount} {base_currency} = {result} {target_currency}')
+
+
+def get_amount_conversion(amount, base_currency, target_currency):
+    url = f'https://v6.exchangerate-api.com/v6/{CURRENCY_API_KEY}/pair/{base_currency}/{target_currency}/{amount}'
+    response = requests.get(url)
+    data = response.json()
+    return data['conversion_result']
+
+
 @tasks.loop(hours=1)
 async def send_converstion_rates_hourly():
     base_currencies = ['USD', 'CAD']
@@ -96,7 +116,7 @@ async def send_converstion_rates_hourly():
 
     try:
         current_vancouver_time = datetime.now(vancouver_timezone)
-        if current_vancouver_time.hour >= 6:
+        if 6 <= current_vancouver_time.hour <= 22:
             for base_currency in base_currencies:
                 if currency_channel:
                     rate = get_currency_conversion(base_currency, target_currency)
