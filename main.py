@@ -5,6 +5,7 @@ import asyncio
 import aiohttp
 import certifi
 import requests
+import json
 from datetime import datetime
 from pytz import timezone
 from discord.ext import commands, tasks
@@ -77,6 +78,7 @@ async def currencies(ctx):
     major_currencies = ["USD", "EUR", "JPY", "GBP", "AUD", "CAD", "CHF", "CNY"]
 
     currency_list = "\n".join(major_currencies)
+    get_currencies('fiat')
 
     await ctx.send(f"Major currencies: \n{currency_list}")
 
@@ -106,6 +108,19 @@ async def convert(ctx, *args):
     target_currency = args[2].upper()
     result = get_amount_conversion(amount, base_currency, target_currency)
     await ctx.send(f'{amount} {base_currency} = {result} {target_currency}')
+
+
+def get_currencies(type_of_currency):
+    base_url = "https://api.currencybeacon.com/v1/currencies"
+    params = {
+        "type": type_of_currency
+    }
+    url = f"{base_url}?api_key={API_KEY}"
+    response = requests.get(url, params=params)
+    data = response.json()
+    formatted_json = json.dumps(data, indent=4)
+    print(formatted_json)
+    return data
 
 
 def get_amount_conversion(amount, from_currency, to_currency):
