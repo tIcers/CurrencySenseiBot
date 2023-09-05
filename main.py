@@ -9,6 +9,10 @@ from datetime import datetime
 from pytz import timezone
 from discord.ext import commands, tasks
 from const import ECON_NEWS_CHANNEL_ID, CURRENCY_CHANNEL_ID
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 aiohttp.TCPConnector.ssl = False
 
@@ -16,6 +20,7 @@ os.environ['SSL_CERT_FILE'] = certifi.where()
 
 TOKEN = os.environ.get("TOKEN")
 CURRENCY_API_KEY = os.environ.get("CURRENCY_API_KEY")
+API_KEY = os.environ.get("API_KEY")
 
 vancouver_timezone = timezone('America/Vancouver')
 
@@ -91,7 +96,9 @@ async def rate(ctx, *args):
 @bot.command()
 async def convert(ctx, *args):
     if not args:
-        await ctx.send("Please provide the amount, base, and target currencies\n(e.g., !convert 10000 USD JPY)")
+        await ctx.send("Please use the following format to convert currencies:\n"
+                       "`!convert [amount] [from_currency] [to_currency]`\n"
+                       "For example: `!convert 10000 USD JPY`")
         return
 
     amount = args[0]
@@ -101,11 +108,19 @@ async def convert(ctx, *args):
     await ctx.send(f'{amount} {base_currency} = {result} {target_currency}')
 
 
-def get_amount_conversion(amount, base_currency, target_currency):
-    url = f'https://v6.exchangerate-api.com/v6/{CURRENCY_API_KEY}/pair/{base_currency}/{target_currency}/{amount}'
-    response = requests.get(url)
+def get_amount_conversion(amount, from_currency, to_currency):
+    base_url = "https://api.currencybeacon.com/v1/convert"
+
+    params = {
+        "from": from_currency.upper(),
+        "to": to_currency.upper(),
+        "amount": amount,
+    }
+    url = f"{base_url}?api_key={API_KEY}"
+
+    response = requests.get(url, params=params)
     data = response.json()
-    return data['conversion_result']
+    return data['value']
 
 
 @tasks.loop(hours=1)
@@ -121,7 +136,12 @@ async def send_converstion_rates_hourly():
                 if currency_channel:
                     rate = get_currency_conversion(base_currency, target_currency)
                     local_time = current_vancouver_time.strftime('%Y-%m-%d %H:%M:%S %Z')
-                    message = f'Every Hour Update: {base_currency} to {target_currency} is {rate} at {local_time}'
+                    message = (
+                        f'Every Hour Update:\n'
+                        f'- Currency Pair: {base_currency} to {target_currency}\n'
+                        f'- Exchange Rate: {rate:.2f}\n'
+                        f'- Date & Time (UTC): {local_time} GMT'
+                    )
                     await currency_channel.send(message)
                 else:
                     print(f"Channel with ID {currency_channel} not found.")
@@ -133,10 +153,20 @@ async def send_converstion_rates_hourly():
 
 def get_currency_conversion(base_currency, target_currency):
     print("...get_currency_conversion...")
-    url = f'https://v6.exchangerate-api.com/v6/{CURRENCY_API_KEY}/latest/{base_currency}'
-    response = requests.get(url)
+    base_url = 'https://api.currencybeacon.com/v1/latest'
+
+    params = {
+        'base': base_currency,
+        'symbols': target_currency
+    }
+
+    url = f"{base_url}?api_key={API_KEY}"
+    response = requests.get(url, params=params)
     data = response.json()
-    return data['conversion_rates'][target_currency]
+    print("data", data)
+
+    jpy_rate = data['rates'].get(target_currency)
+    return jpy_rate
 
 
 async def check_currency_flucturations():
