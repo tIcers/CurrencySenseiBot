@@ -6,7 +6,9 @@ import aiohttp
 import certifi
 import requests
 import json
-from datetime import datetime
+import matplotlib.pyplot as plt
+from io import BytesIO
+from datetime import datetime, date, timedelta
 from pytz import timezone
 from discord.ext import commands, tasks
 from const import ECON_NEWS_CHANNEL_ID, CURRENCY_CHANNEL_ID
@@ -74,16 +76,6 @@ async def help(ctx):
 
 
 @bot.command()
-async def currencies(ctx):
-    major_currencies = ["USD", "EUR", "JPY", "GBP", "AUD", "CAD", "CHF", "CNY"]
-
-    currency_list = "\n".join(major_currencies)
-    get_currencies('fiat')
-
-    await ctx.send(f"Major currencies: \n{currency_list}")
-
-
-@bot.command()
 async def rate(ctx, *args):
     if not args:
         await ctx.send("Please provide the base currency\n (e.g., !rate USD)")
@@ -108,6 +100,16 @@ async def convert(ctx, *args):
     target_currency = args[2].upper()
     result = get_amount_conversion(amount, base_currency, target_currency)
     await ctx.send(f'{amount} {base_currency} = {result} {target_currency}')
+
+
+@bot.command()
+async def currencies(ctx):
+    major_currencies = ["USD", "EUR", "JPY", "GBP", "AUD", "CAD", "CHF", "CNY"]
+
+    currency_list = "\n".join(major_currencies)
+    get_currencies('fiat')
+
+    await ctx.send(f"Major currencies: \n{currency_list}")
 
 
 def get_currencies(type_of_currency):
@@ -201,6 +203,66 @@ async def check_currency_flucturations():
         previous_rate = rate
 
         await asyncio.sleep(3600)
+
+
+@bot.command()
+async def history(ctx, base_currency, target_currency, time_span):
+    print("....Enter the function...")
+    if time_span not in ["1d", "1w", "1y", "5y", "10y"]:
+        await ctx.send("Invalid time span. Please use 1d, 1w, 1y, 5y or 10y")
+
+    end_date = date.today()
+    if time_span == "1d":
+        print("...1d...")
+        start_date = end_date - timedelta(days=1)
+    elif time_span == "1w":
+        print("...1w...")
+        start_date = end_date - timedelta(weeks=1)
+    elif time_span == "6m":
+        start_date = end_date - timedelta(weeks=26)
+    elif time_span == "1y":
+        print("...1y...")
+        start_date = end_date - timedelta(days=365)
+    elif time_span == "5y":
+        print("...5y...")
+        start_date = end_date - timedelta(days=5 * 365)
+    elif time_span == "10":
+        print("...10y...")
+        start_date = end_date - timedelta(days=10 * 365)
+
+    historical_data = get_historical_data(base_currency, target_currency, start_date)
+    print("...historical data... creating...", historical_data)
+    if not historical_data:
+        await ctx.send("Failed to fetch historical data")
+        return
+
+    current_currency_rate =  get_currency_conversion(base_currency, target_currency)
+
+    percentage_change = ((current_currency_rate - historical_data ) / historical_data) * 100
+    await ctx.send(f"The exchange rate for {base_currency}/{target_currency} changed by {percentage_change:.2f}% over the past {time_span}.")
+
+
+def get_historical_data(base_currency, target_currency, start_date):
+    print('...fetching history data....')
+    historical_url = "https://api.currencybeacon.com/v1/historical"
+
+    params = {
+        "base": base_currency,
+        "date": start_date.strftime("%Y-%m-%d"),
+        "symbols": target_currency,
+    }
+
+    url = f"{historical_url}?api_key={API_KEY}"
+    response = requests.get(url, params=params)
+
+    if response.status_code == 200:
+        data = response.json()
+        print("HISTORICAL DATA", data)
+        historical_rates = data.get("response", {}).get("rates", {}).get(target_currency)
+        return historical_rates
+    else:
+        print(f"Failed to fetch historical data. Status code: {response.status_code}")
+        return None
 
 
 async def economic_calender_notification():
