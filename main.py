@@ -14,7 +14,6 @@ from discord.ext import commands, tasks
 from const import ECON_NEWS_CHANNEL_ID, CURRENCY_CHANNEL_ID
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
 load_dotenv()
 
 aiohttp.TCPConnector.ssl = False
@@ -35,6 +34,8 @@ bot.remove_command('help')
 bot_commands = [
         "!convert [amount] [base_currency] [target_currency]- Convert amount Base to target Currency\n e.g 10000 CAD JPY",
         "!currencies - List major currencies",
+        "!rate - Give you Exchange rate - \n e.g !rate USD JPY",
+        "!historical [base currency][target_currency][time span] - \n Give you percentage of exchange rate compare to that time"
         "!help - Show this help message",
 ]
 
@@ -82,9 +83,9 @@ async def rate(ctx, *args):
         return
 
     base_currency = args[0].upper()
-    target_currency = 'JPY'
+    target_currency = args[1].upper()
     rate = get_currency_conversion(base_currency, target_currency)
-    await ctx.send(f'{base_currency.upper()} To JPY is {rate}')
+    await ctx.send(f'{base_currency.upper()} To {target_currency.upper()} is {rate}')
 
 
 @bot.command()
@@ -182,8 +183,8 @@ def get_currency_conversion(base_currency, target_currency):
     data = response.json()
     print("data", data)
 
-    jpy_rate = data['rates'].get(target_currency)
-    return jpy_rate
+    rate = data['rates'].get(target_currency)
+    return rate
 
 
 async def check_currency_flucturations():
