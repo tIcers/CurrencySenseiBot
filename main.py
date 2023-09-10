@@ -35,7 +35,7 @@ bot_commands = [
         "!convert [amount] [base_currency] [target_currency]- Convert amount Base to target Currency\n e.g 10000 CAD JPY",
         "!currencies - List major currencies",
         "!rate - Give you Exchange rate - \n e.g !rate USD JPY",
-        "!historical [base currency][target_currency][time span] - \n Give you percentage of exchange rate compare to that time"
+        "!history [base currency][target_currency][time span] - \n Give you percentage of exchange rate compare to that time"
         "!help - Show this help message",
 ]
 
@@ -266,8 +266,8 @@ def get_historical_data(base_currency, target_currency, start_date):
         return None
 
 
-async def economic_calender_notification():
-    pass
+# async def economic_calender_notification():
+#     pass
 
 
 async def main():
