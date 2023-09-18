@@ -5,6 +5,5 @@ certifi
 requests
 datetime
 pytz
-discord.ext
 dotenv
 beautifulsoup4
