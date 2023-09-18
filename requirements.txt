@@ -3,7 +3,6 @@ asyncio
 aiohttp
 certifi
 requests
-json
 matplotlib
 io
 datetime
