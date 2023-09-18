@@ -51,6 +51,12 @@ async def make_request():
 async def on_ready():
     print("...on_ready...")
     print(f"We have logged in as {bot.user.name}")
+    await bot.change_presence(
+    activity=discord.Activity(
+        type=discord.ActivityType.playing,
+        name="with commands"
+    )
+)
     currency_channel = bot.get_channel(CURRENCY_CHANNEL_ID)
     print(f"currency_channel:{currency_channel.id}")
     await make_request()
