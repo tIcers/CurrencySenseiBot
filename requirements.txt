@@ -1,0 +1,15 @@
+discord
+os
+ssl
+asyncio
+aiohttp
+certifi
+requests
+json
+matplotlib
+io
+datetime
+pytz
+discord.ext
+dotenv
+beautifulsoup4
