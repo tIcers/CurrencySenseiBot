@@ -1,5 +1,4 @@
-discord
-ssl
+discord==2.3.2
 asyncio
 aiohttp
 certifi
