@@ -3,7 +3,6 @@ asyncio
 aiohttp
 certifi
 requests
-io
 datetime
 pytz
 discord.ext
