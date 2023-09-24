@@ -1,27 +1,41 @@
 import requests
-import pandas as pd
-import datetime
-from bs4 import BeautifulSoup as bs
-
+from bs4 import BeautifulSoup
+from discord.ext import tasks
 
 headers = {
     "User-Agent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36"
 }
-url = 'https://tradingeconomics.com/calendar'
 
-response = requests.get(url, headers=headers)
+def scrape_economic_calender():
+    url = 'https://tradingeconomics.com/calendar'
 
-soup = bs(response.content, 'html.parser')
+    with requests.Session() as session:
+        session.headers.update(headers)
+        page = session.get(url)
 
-table = soup.find('div', {id: 'calender'})
+        if page.status_code == 200:
+            soup = BeautifulSoup(page.content, 'html.parser')
+            parents = soup.find('form', id='aspnetForm')
+            container = parents.find('div', class_='container')
+            row = container.find('div', class_='row')
+            main = row.select_one('div.col-xl-12[role="main"]')
+            table = main.find('table', id = 'calendar')
+            hd = table.find_all('thead', class_ = 'table-header')
 
-if table:
-    rows = table.find('tbody').find_all('tr')
+            header_texts = []
 
-    for row in rows:
-        cells = row.find_all('td')
-        cell_data = [cell.get_text(strip=True) for cell in cells]
-        print(cell_data)
+            for header in hd:
+                header_text = ' '.join([th.get_text(strip=True) for th in header.find_all('th')])
+                header_texts.append(header_text)
+            for text in header_texts:
+                print(text)
 
-else:
-    print("Table not found on the page")
+            
+
+        else:
+            print('failed')
+
+
+sp = scrape_economic_calender()
+print(sp)
+
