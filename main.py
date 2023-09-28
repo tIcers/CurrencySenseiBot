@@ -6,8 +6,6 @@ import aiohttp
 import certifi
 import requests
 import json
-import matplotlib.pyplot as plt
-from io import BytesIO
 from datetime import datetime, date, timedelta
 from pytz import timezone
 from discord.ext import commands, tasks
@@ -53,8 +51,8 @@ async def on_ready():
     print(f"We have logged in as {bot.user.name}")
     await bot.change_presence(
     activity=discord.Activity(
-        type=discord.ActivityType.playing,
-        name="with commands"
+        type=discord.ActivityType.watching,
+        name="Currency Exchange"
     )
 )
     currency_channel = bot.get_channel(CURRENCY_CHANNEL_ID)
@@ -222,18 +220,21 @@ async def history(ctx, base_currency, target_currency, time_span):
     if time_span == "1d":
         print("...1d...")
         start_date = end_date - timedelta(days=1)
+        print('start date for 1d', start_date)
     elif time_span == "1w":
         print("...1w...")
         start_date = end_date - timedelta(weeks=1)
+        print('start date for 1w', start_date)
     elif time_span == "6m":
         start_date = end_date - timedelta(weeks=26)
+        print('start date for 6m', start_date)
     elif time_span == "1y":
         print("...1y...")
         start_date = end_date - timedelta(days=365)
     elif time_span == "5y":
         print("...5y...")
         start_date = end_date - timedelta(days=5 * 365)
-    elif time_span == "10":
+    elif time_span == "10y":
         print("...10y...")
         start_date = end_date - timedelta(days=10 * 365)
 
