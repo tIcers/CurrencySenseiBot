@@ -1,6 +1,6 @@
 import discord
 import os
-# import ssl
+import ssl
 import asyncio
 import aiohttp
 import certifi
@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# aiohttp.TCPConnector.ssl = False
+aiohttp.TCPConnector.ssl = False
 
 os.environ['SSL_CERT_FILE'] = certifi.where()
 
