@@ -1,6 +1,6 @@
 import discord
 import os
-import ssl
+# import ssl
 import asyncio
 import aiohttp
 import certifi
@@ -9,12 +9,12 @@ import json
 from datetime import datetime, date, timedelta
 from pytz import timezone
 from discord.ext import commands, tasks
-from const import ECON_NEWS_CHANNEL_ID, CURRENCY_CHANNEL_ID
+from const import  CURRENCY_CHANNEL_ID
 from dotenv import load_dotenv
 
 load_dotenv()
 
-aiohttp.TCPConnector.ssl = False
+# aiohttp.TCPConnector.ssl = False
 
 os.environ['SSL_CERT_FILE'] = certifi.where()
 
