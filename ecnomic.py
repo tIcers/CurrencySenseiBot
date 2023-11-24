@@ -24,13 +24,18 @@ def scrape_economic_calender():
 
             header_texts = []
 
+            tbody = table.find_all('tbody', class_ = 'table-header')
+            print(tbody)
+
+
+            event_data = []
+
             for header in hd:
                 header_text = ' '.join([th.get_text(strip=True) for th in header.find_all('th')])
                 header_texts.append(header_text)
             for text in header_texts:
                 print(text)
 
-            
 
         else:
             print('failed')
