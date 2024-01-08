@@ -1,5 +1,6 @@
 CURRENCY_CHANNEL_ID = 1147252220417560588
 NEWS_CHANNEL_ID = 1153763737195532338
+JOB_CHANNEL_ID=1193417148190699551 
 INDEED_URL = "https://ca.indeed.com/jobs?q=Junior+Software+developer&l=Vancouver%2C+BC&radius=100&vjk=64f885a26a22a348"
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36",
