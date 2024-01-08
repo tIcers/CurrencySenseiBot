@@ -42,16 +42,21 @@ async def make_request():
 
 @tasks.loop(hours=12)
 async def daily_job_posting():
-    new_jobs = scrape_indeed_jobs()
-    channel = bot.get_channel(JOB_CHANNEL_ID)
-    if channel:
-        for job in new_jobs:
-            embed = Embed(title=job['title'], url=job['link'], color=0x1a1a1a)
-            embed.add_field(name="Company", value=job['company'], inline=False)
-            embed.add_field(name="Location", value=job['location'], inline=True)
-            embed.add_field(name="Salary", value=job['salary'], inline=True)
-            embed.set_footer(text="Posted on Indeed")
-            await channel.send(embed=embed)
+    try:
+        new_jobs = scrape_indeed_jobs()
+        channel = bot.get_channel(JOB_CHANNEL_ID)
+        if channel:
+            for job in new_jobs:
+                embed = Embed(title=job['title'], url=job['link'], color=0x1a1a1a)
+                embed.add_field(name="Company", value=job['company'], inline=False)
+                embed.add_field(name="Location", value=job['location'], inline=True)
+                embed.add_field(name="Salary", value=job['salary'], inline=True)
+                embed.set_footer(text="Posted on Indeed")
+                await channel.send(embed=embed)
+        else:
+            print(f"Could not find channel with ID {JOB_CHANNEL_ID}")
+    except Exception as e:
+        print(f"An error occurred during the daily job posting: {e}")
 
 @tasks.loop(hours=1)
 async def send_converstion_rates_hourly():
