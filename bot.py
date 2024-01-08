@@ -1,5 +1,6 @@
 import discord
 import aiohttp
+import asyncio
 import ssl
 from datetime import datetime
 from pytz import timezone
@@ -44,19 +45,24 @@ async def make_request():
 async def daily_job_posting():
     try:
         new_jobs = scrape_indeed_jobs()
+        if not new_jobs:
+            print('No new jobs were found to post.')
+            return
+
         channel = bot.get_channel(JOB_CHANNEL_ID)
-        if channel:
-            for job in new_jobs:
-                embed = Embed(title=job['title'], url=job['link'], color=0x1a1a1a)
-                embed.add_field(name="Company", value=job['company'], inline=False)
-                embed.add_field(name="Location", value=job['location'], inline=True)
-                embed.add_field(name="Salary", value=job['salary'], inline=True)
-                embed.set_footer(text="Posted on Indeed")
-                await channel.send(embed=embed)
-        else:
-            print(f"Could not find channel with ID {JOB_CHANNEL_ID}")
+        if not channel:
+            print(f'Could not find channel with ID: {JOB_CHANNEL_ID}')
+            return
+
+        for job in new_jobs:
+            embed = Embed(title=job['title'], url=job['link'], color=0x1a1a1a)
+            embed.add_field(name="Company", value=job['company'], inline=False)
+            embed.add_field(name="Location", value=job['location'], inline=True)
+            embed.add_field(name="Salary", value=job['salary'], inline=True)
+            embed.set_footer(text="Posted on Indeed")
+            await channel.send(embed=embed)
     except Exception as e:
-        print(f"An error occurred during the daily job posting: {e}")
+        print(f"An error occurred in daily_job_posting: {e}")
 
 @tasks.loop(hours=1)
 async def send_converstion_rates_hourly():
