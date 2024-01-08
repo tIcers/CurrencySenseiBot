@@ -39,5 +39,7 @@ def scrape_indeed_jobs():
         job_info['link'] = 'https://ca.indeed.com' + a_tag['href'] if a_tag and a_tag.has_attr('href') else ''
 
         scraped_jobs.append(job_info)
+        # print(job_info)
+    print(scraped_jobs)
     return scraped_jobs
-scrape_indeed_jobs()
+# scrape_indeed_jobs()
