@@ -96,6 +96,7 @@ async def on_ready():
     await make_request()
     print("send_converstion_rates_hourly is starting..")
     send_converstion_rates_hourly.start()
+    print('indeed job scraping start...')
     daily_job_posting.start()
 
 @bot.event
