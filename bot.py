@@ -4,13 +4,15 @@ import ssl
 from datetime import datetime
 from pytz import timezone
 from discord.ext import commands,tasks
-
+from discord import Embed
 from currency_api import get_currency_conversion
 
-from const import CURRENCY_CHANNEL_ID
+from const import CURRENCY_CHANNEL_ID, JOB_CHANNEL_ID
 from commands import setup_commands
 from dotenv import load_dotenv
 from pytz import timezone
+
+from indeed_scraper import scrape_indeed_jobs
 
 load_dotenv()
 
@@ -37,6 +39,20 @@ async def make_request():
         async with session.get('https://discord.com') as response:
             print("...make_request method...")
             await response.text()
+
+@tasks.loop(hours=12)
+async def daily_job_posting():
+    new_jobs = scrape_indeed_jobs()
+    channel = bot.get_channel(JOB_CHANNEL_ID)
+    if channel:
+        for job in new_jobs:
+            embed = Embed(title=job['title'], url=job['link'], color=0x1a1a1a)
+            embed.add_field(name="Company", value=job['company'], inline=False)
+            embed.add_field(name="Location", value=job['location'], inline=True)
+            embed.add_field(name="Salary", value=job['salary'], inline=True)
+            embed.set_footer(text="Posted on Indeed")
+            await channel.send(embed=embed)
+
 @tasks.loop(hours=1)
 async def send_converstion_rates_hourly():
     base_currencies = ['USD', 'CAD']
@@ -80,6 +96,7 @@ async def on_ready():
     await make_request()
     print("send_converstion_rates_hourly is starting..")
     send_converstion_rates_hourly.start()
+    daily_job_posting.start()
 
 @bot.event
 async def on_message(message):

@@ -3,7 +3,6 @@ import requests
 import os
 from const import PROXY_URL, INDEED_URL
 
-
 def scrape_indeed_jobs():
     session = requests.session()
     proxy = os.getenv("SCRAPE_PROXY")
@@ -33,14 +32,12 @@ def scrape_indeed_jobs():
         location_element = result_content.find('div', attrs={'data-testid': 'text-location'})
         job_info['location'] = location_element.get_text().strip() if location_element else 'No location found'
 
-        salary_element = result_content.find('div', attrs={'data-testid': 'salary-snippet'})
+        salary_element = result_content.find('div', attrs={'data-testid': 'attribute_snippet_testid'})
         job_info['salary'] = salary_element.get_text().strip() if salary_element else 'No salary shown'
 
         a_tag = result_content.find('a')
         job_info['link'] = 'https://ca.indeed.com' + a_tag['href'] if a_tag and a_tag.has_attr('href') else ''
 
         scraped_jobs.append(job_info)
-    print()
     return scraped_jobs
-
 scrape_indeed_jobs()

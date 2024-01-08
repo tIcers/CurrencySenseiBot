@@ -85,3 +85,4 @@ def setup_commands(bot):
         percentage_change = ((current_currency_rate - historical_data ) / historical_data) * 100
         await ctx.send(f"The exchange rate for {base_currency}/{target_currency} changed by {percentage_change:.2f}% over the past {time_span}.")
 
+
