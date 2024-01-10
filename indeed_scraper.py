@@ -1,12 +1,13 @@
 from bs4 import BeautifulSoup
 import requests
 import os
-from const import PROXY_URL, INDEED_URL
+from const import PROXY_URL 
 
-def scrape_indeed_jobs():
+def scrape_indeed_jobs(location):
     session = requests.session()
     proxy = os.getenv("SCRAPE_PROXY")
 
+    INDEED_URL = f"https://ca.indeed.com/jobs?q=Junior+Software+developer&l={location}&fromage=7"
     page = session.get(
         url=PROXY_URL,
         params={
@@ -36,7 +37,7 @@ def scrape_indeed_jobs():
         job_info['salary'] = salary_element.get_text().strip() if salary_element else 'No salary shown'
 
         a_tag = result_content.find('a')
-        job_info['link'] = 'https://ca.indeed.com' + a_tag['href'] if a_tag and a_tag.has_attr('href') else ''
+        job_info['link'] =  a_tag['href'] if a_tag and a_tag.has_attr('href') else ''
 
         scraped_jobs.append(job_info)
         # print(job_info)
