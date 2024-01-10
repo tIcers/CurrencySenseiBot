@@ -8,7 +8,7 @@ from discord.ext import commands,tasks
 from discord import Embed
 from currency_api import get_currency_conversion
 
-from const import CURRENCY_CHANNEL_ID, JOB_CHANNEL_ID
+from const import CURRENCY_CHANNEL_ID, JOB_CHANNEL_ID, JOB_CANADA_CHANNEL
 from commands import setup_commands
 from dotenv import load_dotenv
 from pytz import timezone
@@ -41,28 +41,31 @@ async def make_request():
             print("...make_request method...")
             await response.text()
 
-@tasks.loop(hours=12)
+@tasks.loop(hours=24)
 async def daily_job_posting():
     try:
-        new_jobs = scrape_indeed_jobs()
-        if not new_jobs:
-            print('No new jobs were found to post.')
-            return
+        vancouver_jobs = scrape_indeed_jobs("Vancouver")
+        canada_jobs = scrape_indeed_jobs("Canada")
+        vancouver_channel = bot.get_channel(JOB_CHANNEL_ID)
+        canada_jobs_channel = bot.get_channel(JOB_CANADA_CHANNEL)
 
-        channel = bot.get_channel(JOB_CHANNEL_ID)
-        if not channel:
-            print(f'Could not find channel with ID: {JOB_CHANNEL_ID}')
-            return
+        if vancouver_channel and vancouver_jobs:
+            for job in vancouver_jobs:
+                await post_job(vancouver_channel, job)
+        if canada_jobs_channel and canada_jobs:
+            for job in canada_jobs:
+                await post_job(canada_jobs_channel, job)
 
-        for job in new_jobs:
-            embed = Embed(title=job['title'], url=job['link'], color=0x1a1a1a)
-            embed.add_field(name="Company", value=job['company'], inline=False)
-            embed.add_field(name="Location", value=job['location'], inline=True)
-            embed.add_field(name="Salary", value=job['salary'], inline=True)
-            embed.set_footer(text="Posted on Indeed")
-            await channel.send(embed=embed)
     except Exception as e:
         print(f"An error occurred in daily_job_posting: {e}")
+
+async def post_job(channel, job):
+        embed = Embed(title=job['title'], url=job['link'], color=0x1a1a1a)
+        embed.add_field(name="Company", value=job['company'], inline=False)
+        embed.add_field(name="Location", value=job['location'], inline=True)
+        embed.add_field(name="Salary", value=job['salary'], inline=True)
+        embed.set_footer(text="Posted on Indeed")
+        await channel.send(embed=embed)
 
 @tasks.loop(hours=1)
 async def send_converstion_rates_hourly():
