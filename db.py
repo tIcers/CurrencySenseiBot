@@ -50,5 +50,10 @@ def insert_city(city_name, iata_code, lowest_price):
         VALUES (%s, %s, $s)
         ON CONFLICT(iata_code)
         DO UPDATE SET lowest_price = EXCLUDE.lowest_price
-        WHERE cities.lowest_price > EXCLUDE.lowest_price
-    """)
+        WHERE cities.lowest_price > EXCLUDE.lowest_price;
+    """, (city_name, iata_code, lowest_price))
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
