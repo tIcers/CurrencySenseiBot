@@ -40,3 +40,15 @@ def create_tables():
     conn.commit()
     cur.close()
     conn.close()
+
+def insert_city(city_name, iata_code, lowest_price):
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO cities(city_name, iata_code, lowest_price)
+        VALUES (%s, %s, $s)
+        ON CONFLICT(iata_code)
+        DO UPDATE SET lowest_price = EXCLUDE.lowest_price
+        WHERE cities.lowest_price > EXCLUDE.lowest_price
+    """)
