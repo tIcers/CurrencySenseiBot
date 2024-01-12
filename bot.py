@@ -5,14 +5,14 @@ import ssl
 from datetime import datetime
 from pytz import timezone
 from discord.ext import commands,tasks
-from discord import Embed
+from discord import Embed, embeds
 from currency_api import get_currency_conversion
+from news import get_latest_news
 
-from const import CURRENCY_CHANNEL_ID, JOB_CHANNEL_ID, JOB_CANADA_CHANNEL
+from const import CURRENCY_CHANNEL_ID, JOB_CHANNEL_ID, JOB_CANADA_CHANNEL, NEWS_CHANNEL_ID
 from commands import setup_commands
 from dotenv import load_dotenv
 from pytz import timezone
-
 from indeed_scraper import scrape_indeed_jobs
 
 load_dotenv()
@@ -95,6 +95,31 @@ async def send_converstion_rates_hourly():
         print(f"An error occurred in the main loop: {e}")
 
 
+@tasks.loop(hours=24)
+async def daily_news_analysis():
+    print('Running daily_news_analysis')
+    try:
+        news_articles = get_latest_news()
+        print(f'Found{len(news_articles)} new articles')
+        news_channel = bot.get_channel(NEWS_CHANNEL_ID)
+
+        if news_channel :
+            if news_articles:
+                for article in news_articles:
+                    embed = Embed(title=article['title'], url=article['link'])
+                    embed.add_field(name="Date", value=article['date'], inline=False)
+                    embed.add_field(name="Summary", value=article['summary'], inline=False)
+                    embed.set_footer(text='POsted on Rakuten Securities')
+                    await news_channel.send(embed=embed)
+            else:
+                print('no new articles to show')
+        else:
+            print(f"Could not find channel with ID: {NEWS_CHANNEL_ID}")
+    except Exception as e:
+        print(f"An error occured in daily_news_analysis:{e}")
+
+
+
 @bot.event
 async def on_ready():
     print("...on_ready...")
@@ -105,13 +130,15 @@ async def on_ready():
         name="Currency Exchange"
     )
 )
-    currency_channel = bot.get_channel(CURRENCY_CHANNEL_ID)
-    print(f"currency_channel:{currency_channel.id}")
+    # currency_channel = bot.get_channel(CURRENCY_CHANNEL_ID)
+    # print(f"currency_channel:{currency_channel.id}")
     await make_request()
-    print("send_converstion_rates_hourly is starting..")
-    send_converstion_rates_hourly.start()
-    print('indeed job scraping start...')
-    daily_job_posting.start()
+    # print("send_converstion_rates_hourly is starting..")
+    # send_converstion_rates_hourly.start()
+    # print('indeed job scraping start...')
+    # daily_job_posting.start()
+    print("send daily_news_analysis")
+    daily_news_analysis.start()
 
 @bot.event
 async def on_message(message):
