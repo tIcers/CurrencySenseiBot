@@ -8,51 +8,35 @@ from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from pprint import pprint
 
-load_dotenv()
+BASE_NEWS_URL = 'https://media.rakuten-sec.net'
+
+NEWS_URL= BASE_NEWS_URL + '/category/Kawase-Walker'
+page = requests.get(NEWS_URL)
+soup = BeautifulSoup(page.content, "html.parser")
+
+latest_article = soup.find_all('div', class_='latest')
+
+for article in latest_article:
+    new_marker = article.find('span', class_='new')
+
+    if new_marker and new_marker.get_text(strip=True) == "NEW":
+        date_div = article.find('div', class_='date')
+        date = date_div.get_text(strip=True) if date_div else None
+
+        title_h2 = article.find('h2', class_='title')
+        title = title_h2.get_text(strip=True) if title_h2 else None
+        href = title_h2.find('a')['href'] if title_h2 and title_h2.find('a') else None
+
+        summary_p = article.find('p', class_='summary')
+        summary = summary_p.get_text(strip=True) if summary_p else None
+
+        if href and href.startswith('/'):
+            full_url = BASE_NEWS_URL + href
+        else:
+            full_url = href
 
 
-OPEN_API = os.environ.get("OPEN_API")
-
-# bot = commands.Bot(command_prefix='!')
-
-
-intents = discord.Intents.default()
-intents.members = True
-
-client = discord.Client(intents=intents)
-NEWS_URL='https://www.dailyfx.com/usd-jpy/news-and-analysis'
-response = requests.get(NEWS_URL)
-print(response.text) # this is for testing response
-
-
-# def scrape_news():
-#     NEWS_URL='https://www.dailyfx.com/usd-jpy/news-and-analysis'
-#     response = requests.get(NEWS_URL)
-#     print(response.text) # this is for testing response
-#
-#     soup = BeautifulSoup(response.content, 'html.parser')
-#
-#     news_articles = []
-#     open_api_key = OPEN_API
-#
-#     summaries = []
-#
-#     for article in news_articles:
-#         summary = openai.Completion.create(
-#                 engine = 'davinci-002',
-#                 prompt=f"Summarize the following news article:\n{article}",
-#                 max_token = 100,
-#                 )
-#
-#
-#         summaries.append(summary.choices[0].text)
-#         print(summaries)
-#
-#     return summaries
+        print(f"Date: {date}\n Title: {title}\n Summary: {summary}\n Link: {full_url}\n")
 
 
 
-# def summrize_news(news):
-#     openai.api_key = OPEN_API
-#
-#     model_engine = 'text-davinci-002'
