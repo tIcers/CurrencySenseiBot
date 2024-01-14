@@ -127,7 +127,7 @@ async def on_ready():
     await bot.change_presence(
     activity=discord.Activity(
         type=discord.ActivityType.watching,
-        name="Currency Exchange"
+        name="Currency, News, Jobs.."
     )
 )
     currency_channel = bot.get_channel(CURRENCY_CHANNEL_ID)
