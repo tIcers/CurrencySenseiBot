@@ -9,8 +9,12 @@ from pytz import timezone
 
 import discord
 from commands import setup_commands
-from const import (CURRENCY_CHANNEL_ID, JOB_CANADA_CHANNEL, JOB_CHANNEL_ID,
-                   NEWS_CHANNEL_ID)
+from const import (
+    CURRENCY_CHANNEL_ID,
+    JOB_CANADA_CHANNEL,
+    JOB_CHANNEL_ID,
+    NEWS_CHANNEL_ID,
+)
 from currency_api import get_currency_conversion
 from discord import Embed, embeds
 from indeed_scraper import scrape_indeed_jobs
@@ -88,10 +92,10 @@ async def send_converstion_rates_hourly():
                     rate = get_currency_conversion(base_currency, target_currency)
                     local_time = current_time.strftime("%Y-%m-%d %H:%M:%S %Z")
                     message = (
-                        f"Every Hour Update:\n"
+                        f"Update:\n"
                         f"- Currency Pair: {base_currency} to {target_currency}\n"
                         f"- Exchange Rate: {rate:.2f}\n"
-                        f"- Date & Time (UTC): {local_time} GMT"
+                        f"- Date & Time: {local_time} GMT"
                     )
                     await currency_channel.send(message)
                 else:
@@ -118,7 +122,7 @@ async def daily_news_analysis():
                     embed.add_field(
                         name="Summary", value=article["summary"], inline=False
                     )
-                    embed.set_footer(text="POsted on Rakuten Securities")
+                    embed.set_footer(text="Posted on Rakuten Securities")
                     await news_channel.send(embed=embed)
             else:
                 print("no new articles to show")
